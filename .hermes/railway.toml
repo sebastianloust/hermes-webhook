@@ -4,7 +4,5 @@ dockerfile = "Dockerfile"
 
 [deploy]
 startCommand = "sh -c 'gunicorn -w 4 -b 0.0.0.0:$PORT webhook_flask_railway:app'"
-healthcheckPath = "/health"
-healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
