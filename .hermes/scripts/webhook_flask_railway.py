@@ -11,7 +11,7 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 import re
-import subprocess
+from claude_telegram_handler import call_gemini_with_context, load_conversation_history, save_conversation
 
 # Load environment variables
 # Try multiple paths for development and production
@@ -242,11 +242,10 @@ def telegram_webhook():
         if not user_message:
             return jsonify({'ok': True}), 200
 
-        # Load tracker
-        tracker = load_json(TRACKER_PATH) if TRACKER_PATH else {}
-
-        # Process message with intelligent agent
-        response = handle_message(user_message, tracker)
+        # Process message with Gemini API (with conversation memory)
+        conversation_history = load_conversation_history(max_messages=10)
+        response = call_gemini_with_context(user_message, conversation_history)
+        save_conversation(user_message, response)
 
         # Send response back to Telegram
         send_telegram(response)
@@ -258,7 +257,8 @@ def telegram_webhook():
 
     except Exception as e:
         app.logger.error(f"Webhook error: {e}")
-        return jsonify({'error': str(e)}), 500
+        send_telegram("⚠️ Error interno. Intenta de nuevo.")
+        return jsonify({'ok': True}), 200
 
 
 @app.route('/health', methods=['GET'])
