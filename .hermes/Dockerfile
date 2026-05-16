@@ -8,6 +8,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy scripts
 COPY scripts/webhook_flask_railway.py .
+COPY scripts/claude_api_client.py .
+COPY scripts/claude_telegram_handler.py .
 COPY .env.clean .env
 
 # Create log directory
