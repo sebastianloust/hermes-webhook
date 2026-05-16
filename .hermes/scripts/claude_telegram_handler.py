@@ -128,13 +128,23 @@ def call_gemini_with_context(user_message: str, conversation_history: List[Dict]
         tracker = load_json(TRACKER_PATH)
         system_prompt = build_system_prompt(tracker)
 
-        # Start chat with history
+        # Start chat with history and system prompt
+        full_history = conversation_history.copy()
+        # Prepend system instruction as first user message if no history
+        if not full_history:
+            full_history.append({
+                "role": "user",
+                "parts": [{"text": system_prompt + "\n\n" + user_message}]
+            })
+        else:
+            # Add system context to the new message
+            full_history.append({
+                "role": "user",
+                "parts": [{"text": system_prompt + "\n\n[Nuevo mensaje de usuario]: " + user_message}]
+            })
+
         chat = model.start_chat(history=conversation_history)
-
-        # Send user message with system context in the request
-        full_message = f"{system_prompt}\n\n[Usuario]: {user_message}"
-
-        response = chat.send_message(user_message)
+        response = chat.send_message(system_prompt + "\n\n" + user_message)
         return response.text
 
     except GeminiClientError as e:
